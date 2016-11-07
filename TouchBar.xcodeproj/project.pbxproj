@@ -319,7 +319,7 @@
 					};
 					5EAC86F61DCA8B83001BB8AC = {
 						CreatedOnToolsVersion = 8.1;
-						DevelopmentTeam = L7942L77ZU;
+						DevelopmentTeam = 4MBK8948H7;
 						ProvisioningStyle = Automatic;
 					};
 					5EAC87141DCA8BAC001BB8AC = {
@@ -579,11 +579,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = L7942L77ZU;
+				DEVELOPMENT_TEAM = 4MBK8948H7;
 				INFOPLIST_FILE = TouchBarClient/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.bikkelbroeders.TouchBarClient;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bikkelbroeders.TouchBarClient.kdm;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -592,11 +592,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = L7942L77ZU;
+				DEVELOPMENT_TEAM = 4MBK8948H7;
 				INFOPLIST_FILE = TouchBarClient/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.bikkelbroeders.TouchBarClient;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bikkelbroeders.TouchBarClient.kdm;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
