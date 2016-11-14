@@ -31,6 +31,7 @@
 		5EF078631DCA8CC400BD69DA /* PTProtocol.m in Sources */ = {isa = PBXBuildFile; fileRef = 5EF0785B1DCA8CC400BD69DA /* PTProtocol.m */; };
 		5EF078641DCA8CC400BD69DA /* PTUSBHub.m in Sources */ = {isa = PBXBuildFile; fileRef = 5EF0785D1DCA8CC400BD69DA /* PTUSBHub.m */; };
 		5EF078651DCA8CC400BD69DA /* PTUSBHub.m in Sources */ = {isa = PBXBuildFile; fileRef = 5EF0785D1DCA8CC400BD69DA /* PTUSBHub.m */; };
+		BF777C4C1DDA11FE00B04C25 /* YMKeyboardLayoutHelperView.m in Sources */ = {isa = PBXBuildFile; fileRef = BF777C4B1DDA11FD00B04C25 /* YMKeyboardLayoutHelperView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -97,6 +98,8 @@
 		5EF0785B1DCA8CC400BD69DA /* PTProtocol.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PTProtocol.m; sourceTree = "<group>"; };
 		5EF0785C1DCA8CC400BD69DA /* PTUSBHub.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PTUSBHub.h; sourceTree = "<group>"; };
 		5EF0785D1DCA8CC400BD69DA /* PTUSBHub.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PTUSBHub.m; sourceTree = "<group>"; };
+		BF777C4A1DDA11FD00B04C25 /* YMKeyboardLayoutHelperView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = YMKeyboardLayoutHelperView.h; sourceTree = "<group>"; };
+		BF777C4B1DDA11FD00B04C25 /* YMKeyboardLayoutHelperView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = YMKeyboardLayoutHelperView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -188,6 +191,8 @@
 				5EAC87081DCA8B83001BB8AC /* LaunchScreen.storyboard */,
 				5EAC870B1DCA8B83001BB8AC /* Info.plist */,
 				5EAC86FA1DCA8B83001BB8AC /* Supporting Files */,
+				BF777C4A1DDA11FD00B04C25 /* YMKeyboardLayoutHelperView.h */,
+				BF777C4B1DDA11FD00B04C25 /* YMKeyboardLayoutHelperView.m */,
 			);
 			path = TouchBarClient;
 			sourceTree = "<group>";
@@ -400,6 +405,7 @@
 				5EAC87021DCA8B83001BB8AC /* ViewController.m in Sources */,
 				5EAC86FF1DCA8B83001BB8AC /* AppDelegate.m in Sources */,
 				5EAC86FC1DCA8B83001BB8AC /* main.m in Sources */,
+				BF777C4C1DDA11FE00B04C25 /* YMKeyboardLayoutHelperView.m in Sources */,
 				5EF078601DCA8CC400BD69DA /* PTChannel.m in Sources */,
 				5EF078641DCA8CC400BD69DA /* PTUSBHub.m in Sources */,
 				5EF078621DCA8CC400BD69DA /* PTProtocol.m in Sources */,

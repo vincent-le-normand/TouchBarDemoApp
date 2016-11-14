@@ -13,7 +13,7 @@
 
 static const NSTimeInterval kAnimationDuration = 0.5;
 
-@interface ViewController () <PTChannelDelegate>
+@interface ViewController () <PTChannelDelegate,UITextFieldDelegate>
 
 @property (weak, nonatomic) IBOutlet UIView *backgroundView;
 @property (weak, nonatomic) IBOutlet UIImageView *imageView;
@@ -21,6 +21,7 @@ static const NSTimeInterval kAnimationDuration = 0.5;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *bottomConstraint;
 @property (weak, nonatomic) IBOutlet UILabel *instructionLabel;
 
+@property UITextField * textField;
 @end
 
 @implementation ViewController {
@@ -31,6 +32,15 @@ static const NSTimeInterval kAnimationDuration = 0.5;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+	
+	self.textField = [[UITextField alloc] init];
+	self.textField.delegate = self;
+	self.textField.text = @" ";
+	self.textField.keyboardAppearance = UIKeyboardAppearanceDark;
+	self.textField.autocorrectionType = UITextAutocorrectionTypeNo;
+	self.textField.autocapitalizationType = UITextAutocapitalizationTypeNone;
+	self.textField.keyboardType = UIKeyboardTypeASCIICapable;
+	[self.view addSubview:self.textField];
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -58,6 +68,7 @@ static const NSTimeInterval kAnimationDuration = 0.5;
             NSLog(@"Failed to listen on localhost:%d: %@", kProtocolPort, error);
         } else {
             _listenChannel = channel;
+			[self.textField becomeFirstResponder];
         }
     }];
 }
@@ -68,6 +79,7 @@ static const NSTimeInterval kAnimationDuration = 0.5;
     if (_listenChannel) {
         [_listenChannel close];
         _listenChannel = nil;
+		[self.textField resignFirstResponder];
     }
     
     if (_peerChannel) {
@@ -184,4 +196,40 @@ static const NSTimeInterval kAnimationDuration = 0.5;
     [self activateTouchBar:YES];
 }
 
+- (BOOL)textFieldShouldEndEditing:(UITextField *)textField {
+	return _listenChannel==nil;
+}
+
+- (void) sendKeyboardString:(NSString*)string {
+	NSData* data = [string dataUsingEncoding:NSUTF8StringEncoding];
+	CFDataRef immutableSelf = CFBridgingRetain([data copy]);
+	dispatch_data_t payload = dispatch_data_create(data.bytes, data.length, dispatch_get_main_queue(), ^{
+		CFRelease(immutableSelf);
+	});
+	[_peerChannel sendFrameOfType:ProtocolFrameTypeKeyEvent tag:PTFrameNoTag withPayload:payload callback:^(NSError *error) {
+		if (error) {
+			NSLog(@"Failed to send message: %@", error);
+		}
+	}];
+}
+
+- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
+	if(range.length == 1 && string.length == 0) {
+		[self sendKeyboardString:@"\b"]; // Todo : improve this
+	}
+	else {
+		[self sendKeyboardString:string];
+	}
+	return NO;
+}
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField {
+	[self sendKeyboardString:@"\r"];
+	return NO;
+}
+
+- (BOOL)textFieldShouldClear:(UITextField *)textField {
+	[self sendKeyboardString:@"\b"]; // Todo : improve this
+	return NO;
+}
 @end

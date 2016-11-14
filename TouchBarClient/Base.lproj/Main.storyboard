@@ -23,8 +23,21 @@
                         <rect key="frame" x="0.0" y="0.0" width="640" height="480"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please connect this device to your Mac and start TouchBarServer..." textAlignment="center" lineBreakMode="wordWrap" numberOfLines="5" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GaH-hF-CS5">
+                                <rect key="frame" x="64" y="230" width="512" height="20.5"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="1Op-eo-gP9" customClass="YMKeyboardLayoutHelperView">
+                                <rect key="frame" x="0.0" y="428" width="640" height="52"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="52" placeholder="YES" id="ML9-Ja-29w"/>
+                                </constraints>
+                            </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="fdf-kx-9oY">
-                                <rect key="frame" x="0.0" y="446.5" width="640" height="33.5"/>
+                                <rect key="frame" x="0.0" y="394.5" width="640" height="33.5"/>
                                 <subviews>
                                     <imageView contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="PzG-Nm-vW5">
                                         <rect key="frame" x="8" y="8" width="624" height="17.5"/>
@@ -45,22 +58,19 @@
                                     <outletCollection property="gestureRecognizers" destination="uS1-Td-w9y" appends="YES" id="8HS-dQ-XAc"/>
                                 </connections>
                             </view>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please connect this device to your Mac and start TouchBarServer..." textAlignment="center" lineBreakMode="wordWrap" numberOfLines="5" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GaH-hF-CS5">
-                                <rect key="frame" x="64" y="230" width="512" height="20.5"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                         </subviews>
                         <color key="backgroundColor" red="0.094117647058823528" green="0.094117647058823528" blue="0.094117647058823528" alpha="1" colorSpace="calibratedRGB"/>
                         <gestureRecognizers/>
                         <constraints>
+                            <constraint firstItem="1Op-eo-gP9" firstAttribute="top" secondItem="fdf-kx-9oY" secondAttribute="bottom" id="40L-Ev-Mm4"/>
+                            <constraint firstItem="1Op-eo-gP9" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="BZk-Cd-jfi"/>
                             <constraint firstItem="fdf-kx-9oY" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="Bct-lL-HwQ"/>
                             <constraint firstItem="GaH-hF-CS5" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="XD2-vB-7XE"/>
                             <constraint firstAttribute="trailing" secondItem="fdf-kx-9oY" secondAttribute="trailing" id="Zid-It-lPa"/>
                             <constraint firstItem="GaH-hF-CS5" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="aA8-0W-qAH"/>
                             <constraint firstItem="GaH-hF-CS5" firstAttribute="width" secondItem="8bC-Xf-vdC" secondAttribute="width" multiplier="0.8" id="esl-rw-6Kg"/>
-                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="fdf-kx-9oY" secondAttribute="bottom" id="iYy-Nh-jI3"/>
+                            <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="1Op-eo-gP9" secondAttribute="bottom" id="kvS-H3-XP4"/>
+                            <constraint firstAttribute="trailing" secondItem="1Op-eo-gP9" secondAttribute="trailing" id="xsd-tM-4gz"/>
                         </constraints>
                     </view>
                     <simulatedStatusBarMetrics key="simulatedStatusBarMetrics" statusBarStyle="lightContent"/>
@@ -69,7 +79,6 @@
                     <connections>
                         <outlet property="aspectRatioConstraint" destination="G43-qT-eah" id="IuP-3u-c5X"/>
                         <outlet property="backgroundView" destination="fdf-kx-9oY" id="Roh-4B-JBi"/>
-                        <outlet property="bottomConstraint" destination="iYy-Nh-jI3" id="Nrm-Ej-HTK"/>
                         <outlet property="imageView" destination="PzG-Nm-vW5" id="Zq9-mv-48V"/>
                         <outlet property="instructionLabel" destination="GaH-hF-CS5" id="j2Q-Vj-AfZ"/>
                     </connections>

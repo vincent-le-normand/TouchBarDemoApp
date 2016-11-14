@@ -364,6 +364,65 @@ extern BOOL DFRFoundationPostEventWithMouseActivity(NSEventType type, NSPoint p)
         [self stopStreaming];
     }
 }
+/* Returns key code for given character via the above function, or UINT16_MAX
+ * on error. */
+CGKeyCode keyCodeForChar(const char c)
+{
+	static CFMutableDictionaryRef charToCodeDict = NULL;
+	CGKeyCode code;
+	UniChar character = c;
+	CFStringRef charStr = NULL;
+	
+	/* Generate table of keycodes and characters. */
+	if (charToCodeDict == NULL) {
+		charToCodeDict = CFDictionaryCreateMutable(kCFAllocatorDefault,
+												   128,
+												   &kCFCopyStringDictionaryKeyCallBacks,
+												   NULL);
+		if (charToCodeDict == NULL) return UINT16_MAX;
+		
+		TISInputSourceRef currentKeyboard = TISCopyCurrentKeyboardInputSource();
+		CFDataRef layoutData = TISGetInputSourceProperty(currentKeyboard, kTISPropertyUnicodeKeyLayoutData);
+		const UCKeyboardLayout *keyboardLayout = (const UCKeyboardLayout *)CFDataGetBytePtr(layoutData);
+		/* Loop through every keycode (0 - 127) to find its current mapping. */
+		for (CGKeyCode keyCode = 0; keyCode < 128; keyCode++) {
+			
+			UInt32 keysDown = 0;
+			UniChar chars[4];
+			UniCharCount realLength;
+			
+			UCKeyTranslate(keyboardLayout,
+						   keyCode,
+						   kUCKeyActionDisplay,
+						   0,
+						   LMGetKbdType(),
+						   kUCKeyTranslateNoDeadKeysBit,
+						   &keysDown,
+						   sizeof(chars) / sizeof(chars[0]),
+						   &realLength,
+						   chars);
+			
+			CFStringRef string = CFStringCreateWithCharacters(kCFAllocatorDefault, chars, 1);
+			if (string != NULL) {
+				CFDictionaryAddValue(charToCodeDict, string, (const void *)keyCode);
+				CFRelease(string);
+			}
+		}
+		CFRelease(currentKeyboard);
+
+	}
+	
+	charStr = CFStringCreateWithCharacters(kCFAllocatorDefault, &character, 1);
+	
+	/* Our values may be NULL (0), so we need to use this function. */
+	if (!CFDictionaryGetValueIfPresent(charToCodeDict, charStr,
+									   (const void **)&code)) {
+		code = UINT16_MAX;
+	}
+	
+	CFRelease(charStr);
+	return code;
+}
 
 - (void)device:(NSNumber *)deviceId didReceiveMessageOfType:(uint32_t)type data:(NSData *)data {
     switch (type) {
@@ -386,6 +445,36 @@ extern BOOL DFRFoundationPostEventWithMouseActivity(NSEventType type, NSPoint p)
             DFRFoundationPostEventWithMouseActivity(eventType, location);
             break;
         }
+		case ProtocolFrameTypeKeyEvent: {
+			NSString * string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+			if(string.length == 0) { // Todo : improve this
+				string = @"\b";
+			}
+			
+			for(int i = 0; i < string.length; ++i) {
+				NSString * subString = [string substringWithRange:NSMakeRange(i, 1)];
+				BOOL isUp = ![subString.lowercaseString isEqualToString:subString];
+				char buffer[4];
+				[subString.lowercaseString getCharacters:buffer range:NSMakeRange(0, 1)];
+
+				char current = buffer[i];
+				CGKeyCode keycode = keyCodeForChar(current);
+				if(keycode != UINT16_MAX ){
+					CGEventRef keyup, keydown;
+					keydown = CGEventCreateKeyboardEvent (NULL, (CGKeyCode)keycode, true);
+					keyup = CGEventCreateKeyboardEvent (NULL, (CGKeyCode)keycode, false);
+					CGEventSetFlags(keydown, isUp?kCGEventFlagMaskShift:0);
+					CGEventSetFlags(keyup, isUp?kCGEventFlagMaskShift:0);
+					
+					CGEventPost(kCGHIDEventTap, keydown);
+					CGEventPost(kCGHIDEventTap, keyup);
+					// u
+					CFRelease(keydown);
+					CFRelease(keyup);
+				}
+			}
+			break;
+		}
         default:
             break;
     }

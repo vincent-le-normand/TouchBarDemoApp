@@ -16,6 +16,7 @@ static const int kProtocolPort = 1337;
 typedef NS_ENUM(NSInteger, ProtocolFrameType) {
     ProtocolFrameTypeImage = 100,
     ProtocolFrameTypeMouseEvent = 101,
+	ProtocolFrameTypeKeyEvent = 102,
 };
 
 typedef NS_ENUM(NSInteger, MouseEventType) {
