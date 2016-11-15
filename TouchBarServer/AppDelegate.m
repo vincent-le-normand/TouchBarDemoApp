@@ -445,26 +445,144 @@ CGKeyCode keyCodeForChar(const char c)
             DFRFoundationPostEventWithMouseActivity(eventType, location);
             break;
         }
-		case ProtocolFrameTypeKeyEvent: {
-			NSString * string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-			if(string.length == 0) { // Todo : improve this
-				string = @"\b";
+		case ProtocolFrameTypeTrackpadEvent:{
+			CGEventRef ourEvent = CGEventCreate(NULL);
+			CGPoint eventLocation = CGEventGetLocation(ourEvent);
+			CFRelease(ourEvent);
+			
+			MouseEvent *event = (MouseEvent *)data.bytes;
+			NSPoint location = NSMakePoint(event->x, event->y);
+			static NSPoint previousLocation;
+			if(previousLocation.x == 0 && previousLocation.y == 0) {
+				previousLocation = location;
 			}
+			CGEventType eventType = kCGEventLeftMouseDown;
+			switch(event->type) {
+				case MouseEventTypeDown:
+					eventType = kCGEventLeftMouseDown;
+					break;
+				case MouseEventTypeUp:
+					eventType = kCGEventLeftMouseUp;
+					break;
+				case MouseEventTypeDragged: {
+					eventType = kCGEventMouseMoved;
+					double speed = fabs(location.x - previousLocation.x)+fabs(location.y - previousLocation.y);
+					double factor = 1.0;
+					if(speed>20) {
+						factor = 4.0;
+					}
+					else if(speed>10) {
+						factor = 2.0;
+					}
+					else if(speed>9) {
+						factor = 1.7;
+					}
+					else if(speed>8) {
+						factor = 1.5;
+					}
+					else if(speed>7) {
+						factor = 1.3;
+					}
+					else if(speed>6) {
+						factor = 1.15;
+					}
+					else if(speed>5) {
+						factor = 1.05;
+					}
+					eventLocation.x += (location.x - previousLocation.x)*factor;
+					eventLocation.y += (location.y - previousLocation.y)*factor;
+					CGFloat maxX = 0.0,maxY = 0.0;
+					for (NSScreen * screen in [NSScreen screens]) {
+						maxX = MAX(maxX,NSMaxX(screen.frame));
+						maxY = MAX(maxY,NSMaxY(screen.frame));
+					}
+					if(eventLocation.x<0)
+						eventLocation.x = 0;
+					if(eventLocation.x>=maxX)
+						eventLocation.x = maxX-1;
+					if(eventLocation.y<0)
+						eventLocation.y = 0;
+					if(eventLocation.y>=maxY)
+						eventLocation.y = maxY-1;
+					break;}
+				case MouseEventTypeScroll: {
+					eventType = 0;
+					double speed = fabs(location.x - previousLocation.x)+fabs(location.y - previousLocation.y);
+					double factor = 1.0;
+					if(speed>20) {
+						factor = 4.0;
+					}
+					else if(speed>10) {
+						factor = 2.0;
+					}
+					else if(speed>9) {
+						factor = 1.7;
+					}
+					else if(speed>8) {
+						factor = 1.5;
+					}
+					else if(speed>7) {
+						factor = 1.3;
+					}
+					else if(speed>6) {
+						factor = 1.15;
+					}
+					else if(speed>5) {
+						factor = 1.05;
+					}
+//					CGEventRef cgevent = CGEventCreateScrollWheelEvent(NULL, kCGScrollEventUnitPixel, 2, (location.x - previousLocation.x)*factor,(location.y - previousLocation.y)*factor);
+//					CGEventPost(kCGHIDEventTap, cgevent);
+					CGEventRef cgevent = CGEventCreateScrollWheelEvent(NULL, kCGScrollEventUnitPixel, 1, (location.y - previousLocation.y)*factor);
+					CGEventPost(kCGHIDEventTap, cgevent);
+					
+					break;}
+			}
+			previousLocation = location;
+			static dispatch_source_t timer = nil;
+			if( timer == nil) {
+				timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
+				dispatch_source_set_event_handler(timer, ^{
+					previousLocation = NSZeroPoint;
+					timer = nil;
+				});
+				dispatch_source_set_timer(timer, dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.05 * NSEC_PER_SEC)) , DISPATCH_TIME_FOREVER, 1 * NSEC_PER_SEC);
+				dispatch_resume(timer);
+			}
+			dispatch_source_set_timer(timer, dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.05 * NSEC_PER_SEC)) , DISPATCH_TIME_FOREVER, 1 * NSEC_PER_SEC);
+			if(eventType==0)
+				return;
+			CGEventRef cgevent = CGEventCreateMouseEvent(NULL, eventType, eventLocation, kCGMouseButtonLeft);
+			CGEventPost(kCGHIDEventTap, cgevent);
+			break;
+		}
+		case ProtocolFrameTypeKeyEvent: {
+			NSDictionary * plist = [NSPropertyListSerialization propertyListWithData:data options:0 format:NULL error:NULL];
+			NSString * string = plist[@"string"];
+			
+			CGEventFlags flags = 0;
+			flags |= [plist[@"alt"] boolValue] ? kCGEventFlagMaskAlternate : 0;
+			flags |= [plist[@"cmd"] boolValue] ? kCGEventFlagMaskCommand : 0;
+			flags |= [plist[@"ctrl"] boolValue] ? kCGEventFlagMaskControl : 0;
 			
 			for(int i = 0; i < string.length; ++i) {
 				NSString * subString = [string substringWithRange:NSMakeRange(i, 1)];
 				BOOL isUp = ![subString.lowercaseString isEqualToString:subString];
 				char buffer[4];
-				[subString.lowercaseString getCharacters:buffer range:NSMakeRange(0, 1)];
+				if([subString isEqualToString:@"␡"]) {
+					buffer[0] = '\b';
+				}
+				else {
+					[subString.lowercaseString getCharacters:(unichar *)buffer range:NSMakeRange(0, 1)];
+				}
 
-				char current = buffer[i];
+				char current = buffer[0];
 				CGKeyCode keycode = keyCodeForChar(current);
 				if(keycode != UINT16_MAX ){
 					CGEventRef keyup, keydown;
 					keydown = CGEventCreateKeyboardEvent (NULL, (CGKeyCode)keycode, true);
 					keyup = CGEventCreateKeyboardEvent (NULL, (CGKeyCode)keycode, false);
-					CGEventSetFlags(keydown, isUp?kCGEventFlagMaskShift:0);
-					CGEventSetFlags(keyup, isUp?kCGEventFlagMaskShift:0);
+					CGEventSetFlags(keydown, flags | (isUp?kCGEventFlagMaskShift:0));
+					CGEventSetFlags(keyup, flags | (isUp?kCGEventFlagMaskShift:0));
 					
 					CGEventPost(kCGHIDEventTap, keydown);
 					CGEventPost(kCGHIDEventTap, keyup);

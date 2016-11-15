@@ -17,12 +17,14 @@ typedef NS_ENUM(NSInteger, ProtocolFrameType) {
     ProtocolFrameTypeImage = 100,
     ProtocolFrameTypeMouseEvent = 101,
 	ProtocolFrameTypeKeyEvent = 102,
+	ProtocolFrameTypeTrackpadEvent = 103,
 };
 
 typedef NS_ENUM(NSInteger, MouseEventType) {
     MouseEventTypeDown = 1,
     MouseEventTypeUp = 2,
     MouseEventTypeDragged = 6,
+	MouseEventTypeScroll = 12,
 };
 
 typedef struct {

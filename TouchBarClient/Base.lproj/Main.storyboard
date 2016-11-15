@@ -58,6 +58,13 @@
                                     <outletCollection property="gestureRecognizers" destination="uS1-Td-w9y" appends="YES" id="8HS-dQ-XAc"/>
                                 </connections>
                             </view>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="e5U-Ho-IvK" userLabel="Trackpad">
+                                <rect key="frame" x="0.0" y="0.0" width="640" height="394.5"/>
+                                <connections>
+                                    <outletCollection property="gestureRecognizers" destination="FHQ-86-MCs" appends="YES" id="puN-Zr-pOR"/>
+                                    <outletCollection property="gestureRecognizers" destination="fgR-0o-noJ" appends="YES" id="qV5-5u-fPY"/>
+                                </connections>
+                            </view>
                         </subviews>
                         <color key="backgroundColor" red="0.094117647058823528" green="0.094117647058823528" blue="0.094117647058823528" alpha="1" colorSpace="calibratedRGB"/>
                         <gestureRecognizers/>
@@ -65,11 +72,15 @@
                             <constraint firstItem="1Op-eo-gP9" firstAttribute="top" secondItem="fdf-kx-9oY" secondAttribute="bottom" id="40L-Ev-Mm4"/>
                             <constraint firstItem="1Op-eo-gP9" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="BZk-Cd-jfi"/>
                             <constraint firstItem="fdf-kx-9oY" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="Bct-lL-HwQ"/>
+                            <constraint firstItem="e5U-Ho-IvK" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" id="Lfc-yX-mdT"/>
                             <constraint firstItem="GaH-hF-CS5" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="XD2-vB-7XE"/>
                             <constraint firstAttribute="trailing" secondItem="fdf-kx-9oY" secondAttribute="trailing" id="Zid-It-lPa"/>
                             <constraint firstItem="GaH-hF-CS5" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="aA8-0W-qAH"/>
                             <constraint firstItem="GaH-hF-CS5" firstAttribute="width" secondItem="8bC-Xf-vdC" secondAttribute="width" multiplier="0.8" id="esl-rw-6Kg"/>
+                            <constraint firstAttribute="trailing" secondItem="e5U-Ho-IvK" secondAttribute="trailing" id="iWY-W7-n5T"/>
                             <constraint firstItem="wfy-db-euE" firstAttribute="top" secondItem="1Op-eo-gP9" secondAttribute="bottom" id="kvS-H3-XP4"/>
+                            <constraint firstItem="e5U-Ho-IvK" firstAttribute="leading" secondItem="8bC-Xf-vdC" secondAttribute="leading" id="vr9-HL-RYI"/>
+                            <constraint firstItem="fdf-kx-9oY" firstAttribute="top" secondItem="e5U-Ho-IvK" secondAttribute="bottom" id="xoA-zC-W2a"/>
                             <constraint firstAttribute="trailing" secondItem="1Op-eo-gP9" secondAttribute="trailing" id="xsd-tM-4gz"/>
                         </constraints>
                     </view>
@@ -89,6 +100,16 @@
                         <action selector="recognizerFired:" destination="BYZ-38-t0r" id="MpD-zE-RWN"/>
                     </connections>
                 </pongPressGestureRecognizer>
+                <tapGestureRecognizer delaysTouchesBegan="YES" id="FHQ-86-MCs" userLabel="Trackpad Tap Gesture Recognizer">
+                    <connections>
+                        <action selector="trackpadRecognizerFired:" destination="BYZ-38-t0r" id="KEy-g9-g7X"/>
+                    </connections>
+                </tapGestureRecognizer>
+                <panGestureRecognizer minimumNumberOfTouches="1" id="fgR-0o-noJ" userLabel="Trackpad Pan Gesture Recognizer">
+                    <connections>
+                        <action selector="trackpadRecognizerFired:" destination="BYZ-38-t0r" id="2e3-50-4qW"/>
+                    </connections>
+                </panGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="139.19999999999999" y="136.73163418290855"/>
         </scene>

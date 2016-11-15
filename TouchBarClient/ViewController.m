@@ -13,6 +13,12 @@
 
 static const NSTimeInterval kAnimationDuration = 0.5;
 
+@interface FakeTextField : UITextField
+@property BOOL ctrlPressed;
+@property BOOL cmdPressed;
+@property BOOL altPressed;
+@end
+
 @interface ViewController () <PTChannelDelegate,UITextFieldDelegate>
 
 @property (weak, nonatomic) IBOutlet UIView *backgroundView;
@@ -21,7 +27,7 @@ static const NSTimeInterval kAnimationDuration = 0.5;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *bottomConstraint;
 @property (weak, nonatomic) IBOutlet UILabel *instructionLabel;
 
-@property UITextField * textField;
+@property FakeTextField * textField;
 @end
 
 @implementation ViewController {
@@ -33,13 +39,8 @@ static const NSTimeInterval kAnimationDuration = 0.5;
 - (void)viewDidLoad {
     [super viewDidLoad];
 	
-	self.textField = [[UITextField alloc] init];
+	self.textField = [[FakeTextField alloc] init];
 	self.textField.delegate = self;
-	self.textField.text = @" ";
-	self.textField.keyboardAppearance = UIKeyboardAppearanceDark;
-	self.textField.autocorrectionType = UITextAutocorrectionTypeNo;
-	self.textField.autocapitalizationType = UITextAutocapitalizationTypeNone;
-	self.textField.keyboardType = UIKeyboardTypeASCIICapable;
 	[self.view addSubview:self.textField];
 }
 
@@ -88,6 +89,70 @@ static const NSTimeInterval kAnimationDuration = 0.5;
     }
 }
 
+- (void) sendMouseEvent:(MouseEvent)event withType:(ProtocolFrameType)type {
+	// XXX hardcoded 2, because the touch bar is rendered @2x
+	
+	
+	NSData* data = [NSData dataWithBytes:&event length:sizeof(event)];
+	CFDataRef immutableSelf = CFBridgingRetain([data copy]);
+	dispatch_data_t payload = dispatch_data_create(data.bytes, data.length, dispatch_get_main_queue(), ^{
+		CFRelease(immutableSelf);
+	});
+	
+	[_peerChannel sendFrameOfType:type tag:PTFrameNoTag withPayload:payload callback:^(NSError *error) {
+		if (error) {
+			NSLog(@"Failed to send message: %@", error);
+		}
+	}];
+}
+
+- (IBAction)trackpadRecognizerFired:(UIGestureRecognizer*)recognizer {
+	if (!_peerChannel || !_active) return;
+	
+	MouseEvent event;
+	CGPoint location = [recognizer locationInView:_imageView];
+	CGFloat scale = 2 * _imageView.frame.size.width / _imageView.image.size.width;
+	event.x = location.x / scale;
+	event.y = location.y / scale;
+
+	if([recognizer isKindOfClass:[UITapGestureRecognizer class]]) {
+		if (recognizer.state == UIGestureRecognizerStateBegan) {
+		} else if (recognizer.state == UIGestureRecognizerStateCancelled || recognizer.state == UIGestureRecognizerStateEnded) {
+			event.type = MouseEventTypeDown;
+			[self sendMouseEvent:event withType:ProtocolFrameTypeTrackpadEvent];
+			event.type = MouseEventTypeUp;
+			[self sendMouseEvent:event withType:ProtocolFrameTypeTrackpadEvent];
+
+//		} else if (recognizer.state == UIGestureRecognizerStateChanged) {
+//			event.type = MouseEventTypeDragged;
+		} else {
+			return;
+		}
+	}
+	else {
+		static MouseEventType eventType;
+		if (recognizer.state == UIGestureRecognizerStateBegan) {
+			event.type = MouseEventTypeDown;
+			if(recognizer.numberOfTouches==2) {
+				eventType = MouseEventTypeScroll;
+			}
+			else if (recognizer.numberOfTouches==1) {
+				eventType = MouseEventTypeDragged;
+			}
+			
+		} else if (recognizer.state == UIGestureRecognizerStateChanged) {
+			if(recognizer.numberOfTouches==2) {
+				eventType = MouseEventTypeScroll;
+			}
+			event.type = eventType;
+		} else {
+			return;
+		}
+		[self sendMouseEvent:event withType:ProtocolFrameTypeTrackpadEvent];
+	}
+	
+}
+
 - (IBAction)recognizerFired:(UIGestureRecognizer*)recognizer {
     if (!_peerChannel || !_active) return;
     
@@ -110,17 +175,7 @@ static const NSTimeInterval kAnimationDuration = 0.5;
     event.x = location.x / scale;
     event.y = location.y / scale;
 
-    NSData* data = [NSData dataWithBytes:&event length:sizeof(event)];
-    CFDataRef immutableSelf = CFBridgingRetain([data copy]);
-    dispatch_data_t payload = dispatch_data_create(data.bytes, data.length, dispatch_get_main_queue(), ^{
-        CFRelease(immutableSelf);
-    });
-    
-    [_peerChannel sendFrameOfType:ProtocolFrameTypeMouseEvent tag:PTFrameNoTag withPayload:payload callback:^(NSError *error) {
-        if (error) {
-            NSLog(@"Failed to send message: %@", error);
-        }
-    }];
+	[self sendMouseEvent:event withType:ProtocolFrameTypeMouseEvent];
 }
 
 - (void)activateTouchBar:(BOOL)animated {
@@ -201,11 +256,12 @@ static const NSTimeInterval kAnimationDuration = 0.5;
 }
 
 - (void) sendKeyboardString:(NSString*)string {
-	NSData* data = [string dataUsingEncoding:NSUTF8StringEncoding];
+	NSData* data = [NSPropertyListSerialization dataWithPropertyList:@{@"string":string,@"ctrl":@(self.textField.ctrlPressed),@"alt":@(self.textField.altPressed),@"cmd":@(self.textField.cmdPressed)} format:NSPropertyListBinaryFormat_v1_0 options:0 error:NULL];
 	CFDataRef immutableSelf = CFBridgingRetain([data copy]);
 	dispatch_data_t payload = dispatch_data_create(data.bytes, data.length, dispatch_get_main_queue(), ^{
 		CFRelease(immutableSelf);
 	});
+
 	[_peerChannel sendFrameOfType:ProtocolFrameTypeKeyEvent tag:PTFrameNoTag withPayload:payload callback:^(NSError *error) {
 		if (error) {
 			NSLog(@"Failed to send message: %@", error);
@@ -215,7 +271,7 @@ static const NSTimeInterval kAnimationDuration = 0.5;
 
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string {
 	if(range.length == 1 && string.length == 0) {
-		[self sendKeyboardString:@"\b"]; // Todo : improve this
+		[self sendKeyboardString:@"␡"];
 	}
 	else {
 		[self sendKeyboardString:string];
@@ -229,7 +285,89 @@ static const NSTimeInterval kAnimationDuration = 0.5;
 }
 
 - (BOOL)textFieldShouldClear:(UITextField *)textField {
-	[self sendKeyboardString:@"\b"]; // Todo : improve this
+	[self sendKeyboardString:@"␡"];
 	return NO;
+}
+@end
+
+
+@implementation  FakeTextField : UITextField
+- (instancetype)init
+{
+	self = [super init];
+	if (self) {
+		self.text = @" ";
+		self.keyboardAppearance = UIKeyboardAppearanceDark;
+		self.autocorrectionType = UITextAutocorrectionTypeNo;
+		self.autocapitalizationType = UITextAutocapitalizationTypeNone;
+		self.keyboardType = UIKeyboardTypeASCIICapable;
+		
+		UIToolbar *toolBar = [[UIToolbar alloc] initWithFrame:CGRectMake(0.0f,
+																		 0.0f,
+																		 200.,
+																		 44.0f)];
+		toolBar.translucent = NO;
+		toolBar.tintColor = [UIColor lightGrayColor];
+		toolBar.barTintColor = [UIColor colorWithWhite:0.05 alpha:1.0];
+		toolBar.items =   @[ [[UIBarButtonItem alloc] initWithTitle:@"ctrl"
+															  style:UIBarButtonItemStylePlain
+															 target:self
+															 action:@selector(ctrlPressed:)],
+							 [[UIBarButtonItem alloc] initWithTitle:@"alt"
+															  style:UIBarButtonItemStylePlain
+															 target:self
+															 action:@selector(altPressed:)],
+							 [[UIBarButtonItem alloc] initWithTitle:@"cmd"
+															  style:UIBarButtonItemStylePlain
+															 target:self
+															 action:@selector(cmdPressed:)],
+							 [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:NULL],
+							 [[UIBarButtonItem alloc] initWithTitle:@"tab"
+															  style:UIBarButtonItemStylePlain
+															 target:self
+															 action:@selector(tabPressed:)],
+							 ];
+		self.inputAccessoryView = toolBar;
+	}
+	return self;
+}
+
+- (IBAction)ctrlPressed:(UIBarButtonItem*)sender {
+	self.ctrlPressed = !self.ctrlPressed;
+	if(self.ctrlPressed) {
+		sender.tintColor = [UIColor whiteColor];
+	}
+	else {
+		sender.tintColor = nil;
+	}
+}
+
+- (IBAction)altPressed:(UIBarButtonItem*)sender {
+	self.altPressed = !self.altPressed;
+	if(self.altPressed) {
+		sender.tintColor = [UIColor whiteColor];
+	}
+	else {
+		sender.tintColor = nil;
+	}
+}
+
+- (IBAction)tabPressed:(UIBarButtonItem*)sender {
+	[self.delegate textField:self shouldChangeCharactersInRange:NSMakeRange(0, 0) replacementString:@"\t"];
+}
+
+- (IBAction)cmdPressed:(UIBarButtonItem*)sender {
+	self.cmdPressed = !self.cmdPressed;
+	if(self.cmdPressed) {
+		sender.tintColor = [UIColor whiteColor];
+	}
+	else {
+		sender.tintColor = nil;
+	}
+}
+
+- (BOOL)canPerformAction:(SEL)action withSender:(id)sender
+{
+	return false;
 }
 @end
